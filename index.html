@@ -2,46 +2,63 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>블록미디어 AI 데이터 터미널 데모</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOCKMEDIA AI 데이터 터미널 데모</title>
     <style>
-        body { font-family: sans-serif; background: #131722; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
-        .header { border-bottom: 2px solid #2962ff; padding-bottom: 10px; margin-bottom: 20px; }
+        body { font-family: 'Inter', sans-serif; background: #0d1117; color: #e6edf3; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: #58a6ff; }
         .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .card { background: #1e222d; padding: 20px; border-radius: 8px; border: 1px solid #363c4e; }
-        .ai-badge { background: #2962ff; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-        .status { color: #00ff88; font-size: 14px; margin-top: 10px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .ai-badge { background: #238636; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .chart-container { height: 450px; background: #000; border-radius: 8px; overflow: hidden; }
+        .insight-box { line-height: 1.8; font-size: 15px; color: #c9d1d9; }
+        .btn-subscribe { width: 100%; padding: 15px; background: #1f6feb; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        .btn-subscribe:hover { background: #388bfd; }
+        .status-dot { height: 8px; width: 8px; background-color: #3fb950; border-radius: 50%; display: inline-block; margin-right: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>BLOCKMEDIA <span style="color:#2962ff">AI Terminal</span> <sup>Beta</sup></h1>
+            <div class="logo">BLOCKMEDIA <span style="color:#ffffff">AI Terminal</span></div>
+            <div style="font-size: 14px;"><span class="status-dot"></span> MCP Server Active: <span style="color:#58a6ff">Yahoo-Finance-v1</span></div>
         </div>
         
         <div class="grid">
             <div class="card">
-                <h3>실시간 시장 데이터 (via Yahoo Finance MCP)</h3>
-                <div style="height:400px; background:#2a2e39; display:flex; align-items:center; justify-content:center;">
-                    <p>차트 로딩 중... (BTC/USD 실시간 연동)</p>
-                </div>
-                <p class="status">● MCP Server Connected: Yahoo-Finance v1.2</p>
+                <h3 style="margin-top:0;">실시간 시장 데이터 (Live Feed)</h3>
+                <div class="chart-container">
+                    <div class="tradingview-widget-container" style="height:100%;width:100%">
+                        <div id="tradingview_chart" style="height:100%;width:100%"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                        <script type="text/javascript">
+                        new TradingView.widget({
+                            "autosize": true,
+                            "symbol": "BINANCE:BTCUSDT",
+                            "interval": "D",
+                            "timezone": "Asia/Seoul",
+                            "theme": "dark",
+                            "style": "1",
+                            "locale": "ko",
+                            "toolbar_bg": "#f1f3f6",
+                            "enable_publishing": false,
+                            "hide_side_toolbar": false,
+                            "allow_symbol_change": true,
+                            "container_id": "tradingview_chart"
+                        });
+                        </script>
+                    </div>
+                    </div>
             </div>
 
             <div class="card">
-                <h3><span class="ai-badge">AI INSIGHT</span> 심층 분석</h3>
-                <p style="font-size: 14px; line-height: 1.6; color: #d1d4dc;">
-                    <strong>[분석 결과]</strong><br>
-                    현재 비트코인은 $98,200 저항선을 테스트 중입니다. 
-                    MCP 데이터 분석 결과, 거래소 유입량이 감소하며 매도 압력이 완화되고 있습니다. 
-                    AAS 전략에 따라 비중 15% 유지를 권고합니다...
-                </p>
-                <hr style="border:0; border-top:1px solid #363c4e;">
-                <button style="width:100%; padding:10px; background:#2962ff; color:white; border:none; border-radius:4px; cursor:pointer;">
-                    구독하고 전체 리포트 보기 (월 4,900원)
-                </button>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0;">AI 심층 분석</h3>
+                    <span class="ai-badge">REAL-TIME</span>
+                </div>
+                <div class="insight-box">
+                    <p><strong>[데이터 수집 완료]</strong><br>
+                    야후 파이낸스 MCP를 통해 비트코인(BTC) 및 나스닥(IXIC) 상관관계 데이터를 추출했습니다.</p>
+                    <p style="background: #0d1117; padding: 10px
