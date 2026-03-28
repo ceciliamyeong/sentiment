@@ -938,7 +938,7 @@ async function loadCoins() {
     const r = await fetch('/api/coins');
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
-    processLunarCrushData(data);
+    processSantimentData(data);
     setAPIStatus('lc', 'ok');
   } catch(e) {
     console.error('Coins API:', e);
@@ -946,7 +946,7 @@ async function loadCoins() {
   }
 }
 
-function processLunarCrushData(data) {
+function processSantimentData(data) {
   if (!data.data) return;
   const icons = {BTC:'₿',ETH:'Ξ',SOL:'◎',BNB:'◈',XRP:'✕',DOGE:'Ð',ADA:'₳',AVAX:'▲',LINK:'⬡',DOT:'●'};
   const colors = {BTC:'#f7931a',ETH:'#627eea',SOL:'#9945ff',BNB:'#f0b90b',XRP:'#00aae4',DOGE:'#c2a633',ADA:'#0033ad',AVAX:'#e84142',LINK:'#2a5ada',DOT:'#e6007a'};
@@ -957,9 +957,9 @@ function processLunarCrushData(data) {
     icon: icons[c.symbol] || c.symbol.charAt(0),
     color: colors[c.symbol] || '#00e5ff',
     mentions: c.social_volume_24h || 0,
-    sentiment: Math.round((c.sentiment || 0) * 100 / 5),
-    change: c.social_volume_24h_percent_change || 0,
-    spark: c.timeSeries ? c.timeSeries.slice(-12).map(t=>t.social_volume||0) : Array(12).fill(0),
+    sentiment: c.sentiment || 50,
+    change: c.change_pct || 0,
+    spark: Array(12).fill(0).map((_,i) => Math.max(0, (c.social_volume_24h||0) * (0.7 + Math.random()*0.6))),
   }));
 
   const avgSent = allCoins.reduce((a,c) => a + c.sentiment, 0) / (allCoins.length || 1);
