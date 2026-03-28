@@ -822,9 +822,14 @@
       <div class="panel-header">
         <div class="panel-title">🚨 이슈 알림</div>
       </div>
-      <div id="alertsFeed">
-        <div class="error-card"><div class="err-icon">🔕</div><p>알림 없음</p></div>
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchAlertTab('surge')">🚀 급등/급락</button>
+        <button class="tab-btn" onclick="switchAlertTab('trending')">🔥 트렌딩</button>
+        <button class="tab-btn" onclick="switchAlertTab('breaking')">📰 속보</button>
       </div>
+      <div id="alertsSurge"></div>
+      <div id="alertsTrending" style="display:none"></div>
+      <div id="alertsBreaking" style="display:none"></div>
     </div>
   </div>
 </div>
@@ -891,9 +896,20 @@ async function loadAll() {
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
 
-  await Promise.all([loadNews(), loadCoins()]);
+  await Promise.all([loadNews(), loadCoins(), loadTrending()]);
   updateTimestamp();
   btn.classList.remove('spinning');
+}
+
+async function loadTrending() {
+  try {
+    const r = await fetch('/api/trending');
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    renderTrending(data);
+  } catch(e) {
+    console.error('Trending API:', e);
+  }
 }
 
 async function loadNews() {
@@ -931,6 +947,7 @@ function processCryptoPanicData(data) {
   });
   document.getElementById('newsCount').textContent = allNews.length;
   renderNews(allNews);
+  renderBreakingNews(allNews);
 }
 
 async function loadCoins() {
@@ -1090,30 +1107,93 @@ function fullSparkPath(data) {
   }).join(' ');
 }
 
-// ── RENDER ALERTS ──────────────────────────────────────────────
+// ── ALERT TABS ────────────────────────────────────────────────
+let currentAlertTab = 'surge';
+let trendingWords = [];
+
+function switchAlertTab(tab) {
+  currentAlertTab = tab;
+  document.querySelectorAll('.tab-row + div, .tab-row ~ div').forEach(el => {
+    if (el.id && el.id.startsWith('alerts')) el.style.display = 'none';
+  });
+  document.getElementById('alertsSurge').style.display = tab === 'surge' ? 'block' : 'none';
+  document.getElementById('alertsTrending').style.display = tab === 'trending' ? 'block' : 'none';
+  document.getElementById('alertsBreaking').style.display = tab === 'breaking' ? 'block' : 'none';
+
+  // 탭 버튼 활성화
+  const btns = document.querySelectorAll('.tab-row .tab-btn');
+  btns.forEach((b, i) => {
+    b.classList.toggle('active', ['surge','trending','breaking'][i] === tab);
+  });
+}
+
+// ── 급등/급락 알림 ─────────────────────────────────────────────
 function renderAlerts(coins) {
   const alerts = [];
   coins.forEach(c => {
-    if (c.change > 20) alerts.push({ icon:'🚀', text:`${c.name}(${c.symbol}) 언급량 ${c.change.toFixed(1)}% 급증`, time:'방금' });
-    if (c.change < -15) alerts.push({ icon:'⚠️', text:`${c.name}(${c.symbol}) 언급량 ${Math.abs(c.change).toFixed(1)}% 급감`, time:'방금' });
-    if (c.sentiment > 80) alerts.push({ icon:'🔥', text:`${c.symbol} 소셜 센티먼트 극강세 (${c.sentiment}%)`, time:'방금' });
-    if (c.sentiment < 30) alerts.push({ icon:'❄️', text:`${c.symbol} 소셜 센티먼트 극약세 (${c.sentiment}%)`, time:'방금' });
+    if (c.change > 20) alerts.push({ icon:'🚀', text:`${c.name}(${c.symbol}) 소셜 언급량 ${c.change.toFixed(1)}% 급증`, time:'방금', color:'var(--green)' });
+    if (c.change < -15) alerts.push({ icon:'📉', text:`${c.name}(${c.symbol}) 소셜 언급량 ${Math.abs(c.change).toFixed(1)}% 급감`, time:'방금', color:'var(--red)' });
+    if (c.sentiment > 78) alerts.push({ icon:'🔥', text:`${c.symbol} 센티먼트 극강세 (${c.sentiment}%) — 과열 주의`, time:'방금', color:'var(--green)' });
+    if (c.sentiment < 35) alerts.push({ icon:'❄️', text:`${c.symbol} 센티먼트 극약세 (${c.sentiment}%) — 공포 구간`, time:'방금', color:'var(--red)' });
   });
 
-  const feed = document.getElementById('alertsFeed');
+  const el = document.getElementById('alertsSurge');
   if (!alerts.length) {
-    feed.innerHTML = `<div class="error-card"><div class="err-icon">✅</div><p>현재 특이 알림 없음</p></div>`;
+    el.innerHTML = `<div class="error-card"><div class="err-icon">✅</div><p>현재 특이 급등/급락 없음</p></div>`;
     return;
   }
-  feed.innerHTML = alerts.slice(0,8).map(a => `
+  el.innerHTML = alerts.slice(0,8).map(a => `
     <div class="alert-item">
       <div class="alert-icon">${a.icon}</div>
       <div>
-        <div class="alert-text">${a.text}</div>
+        <div class="alert-text" style="color:${a.color||'var(--text)'}">${a.text}</div>
         <div class="alert-time">${a.time}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
+}
+
+// ── 트렌딩 키워드 렌더 ─────────────────────────────────────────
+function renderTrending(data) {
+  const el = document.getElementById('alertsTrending');
+  if (!data || !data.data) {
+    el.innerHTML = `<div class="error-card"><div class="err-icon">📡</div><p>트렌딩 데이터 로딩 중</p></div>`;
+    return;
+  }
+  const latest = data.data.getTrendingWords;
+  if (!latest || !latest.length) {
+    el.innerHTML = `<div class="error-card"><div class="err-icon">📡</div><p>트렌딩 데이터 없음</p></div>`;
+    return;
+  }
+  const words = latest[latest.length - 1].topWords || [];
+  el.innerHTML = words.slice(0, 10).map((w, i) => `
+    <div class="alert-item">
+      <div class="alert-icon" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent);width:20px">${i+1}</div>
+      <div style="flex:1">
+        <div class="alert-text" style="color:var(--accent);font-weight:600">#${w.word}</div>
+        <div class="alert-time">Score: ${Math.round(w.score).toLocaleString()}</div>
+      </div>
+      <div style="width:80px;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;align-self:center">
+        <div style="height:100%;border-radius:2px;background:var(--accent);width:${Math.min(100, (w.score / (words[0]?.score||1)) * 100).toFixed(0)}%"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── 속보 뉴스 렌더 ─────────────────────────────────────────────
+function renderBreakingNews(news) {
+  const el = document.getElementById('alertsBreaking');
+  const breaking = news.slice(0, 8);
+  if (!breaking.length) {
+    el.innerHTML = `<div class="error-card"><div class="err-icon">📭</div><p>속보 없음</p></div>`;
+    return;
+  }
+  el.innerHTML = breaking.map(n => `
+    <div class="alert-item">
+      <div class="alert-icon">${n.kind === 'bullish' ? '📈' : n.kind === 'bearish' ? '📉' : '⚡'}</div>
+      <div>
+        <div class="alert-text">${n.title}</div>
+        <div class="alert-time">${n.source} · ${n.time}</div>
+      </div>
+    </div>`).join('');
 }
 
 // ── SENTIMENT RING ─────────────────────────────────────────────
