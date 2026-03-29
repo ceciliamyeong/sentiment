@@ -825,7 +825,7 @@
       <div class="tab-row">
         <button class="tab-btn active" onclick="switchAlertTab('surge')">🚀 급등/급락</button>
         <button class="tab-btn" onclick="switchAlertTab('trending')">🔥 크립토 트렌딩</button>
-        <button class="tab-btn" onclick="switchAlertTab('reddit')">💬 금융 Reddit</button>
+        <button class="tab-btn" onclick="switchAlertTab('reddit')">🌐 글로벌 금융</button>
         <button class="tab-btn" onclick="switchAlertTab('breaking')">📰 속보</button>
       </div>
       <div id="alertsSurge"></div>
@@ -931,21 +931,21 @@ async function loadReddit() {
 function renderReddit(data) {
   const el = document.getElementById('alertsReddit');
   if (!data || !data.data || !data.data.length) {
-    el.innerHTML = `<div class="error-card"><div class="err-icon">📭</div><p>Reddit 데이터 없음</p></div>`;
+    el.innerHTML = `<div class="error-card"><div class="err-icon">📭</div><p>금융 뉴스 데이터 없음</p></div>`;
     return;
   }
   el.innerHTML = data.data.map(p => `
     <a class="alert-item" href="${p.url}" target="_blank" rel="noopener" style="display:flex;text-decoration:none;color:inherit;gap:12px;align-items:flex-start;">
       <div style="flex-shrink:0;padding-top:2px">
         <span style="font-size:10px;padding:2px 6px;border-radius:3px;font-family:'Space Mono',monospace;
-          background:${p.category==='crypto'?'rgba(0,229,255,0.1)':'rgba(168,85,247,0.1)'};
+          background:${p.category==='crypto'?'rgba(59,130,246,0.1)':'rgba(168,85,247,0.1)'};
           color:${p.category==='crypto'?'var(--accent)':'var(--purple)'};
-          border:1px solid ${p.category==='crypto'?'rgba(0,229,255,0.2)':'rgba(168,85,247,0.2)'}"
+          border:1px solid ${p.category==='crypto'?'rgba(59,130,246,0.2)':'rgba(168,85,247,0.2)'}"
         >${p.subreddit}</span>
       </div>
       <div style="flex:1;min-width:0">
         <div class="alert-text" style="font-size:12px;line-height:1.4;margin-bottom:4px">${p.title}</div>
-        <div class="alert-time">⬆ ${p.score.toLocaleString()} · 💬 ${p.comments.toLocaleString()} ↗</div>
+        <div class="alert-time">${p.time || '최근'} ↗</div>
       </div>
     </a>`).join('');
 }
